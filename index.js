@@ -82,17 +82,23 @@ function distance(jad, p) {
 }
 
 function sort_feacher(GeoJSON, p) {
-  var sorted = new Array();
-  for (var i = 0; i < GeoJSON.features.length; i++) {
-    if (GeoJSON.features[i].geometry.type == 'Polygon') {
-      sorted[i] = {distance: distance(GeoJSON.features[i].geometry.coordinates[0][0], p), id: i};
-    } else {
-      sorted[i] = {distance: distance(GeoJSON.features[i].geometry.coordinates[0][0][0], p), id: i};
-    }
+  const sorted = [];
+  for (let i = 0; i < GeoJSON.features.length; i++) {
+    sorted[i] = {distance: get_distance(GeoJSON.features[i].geometry, p), id: i};
   }
   return sorted.sort(function (a, b) {
     return (a.distance - b.distance);
   });
+}
+
+function get_distance(geometry, p) {
+  if (geometry.type === 'Polygon') {
+    return distance(geometry.coordinates[0][0], p);
+  } else if (geometry.type === 'GeometryCollection'){
+    return get_distance(geometry.geometries[0], p);
+  } else {
+    return distance(geometry.coordinates[0][0][0], p);
+  }
 }
 
 function normal_ref_vector(jad, mix) {
