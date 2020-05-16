@@ -9,9 +9,9 @@ function det(x, y) {
 function circular(l, i) {
   if ((i > 0) && (i <= l - 2)) {
     return ([i - 1, i + 1]);
-  } else if (i == 0) {
+  } else if (i === 0) {
     return ([l - 2, 1]);
-  } else if (i == l - 1) {
+  } else if (i === l - 1) {
     return ([l - 2, 1]);
   }
 }
@@ -47,19 +47,18 @@ function vct_max(jad, point, p, saver) {
   }
   if (tsd <= masafa) {
     return pid;
-  }
-  else {
+  } else {
     return -1;
   }
 }
 
 function filter(jad, point, p, saver) {
-  var b;
-  var s;
-  var tsd = scalar(vector(point, p), vector(point, jad[0][1]));
+  let b;
+  let s;
+  let tsd = scalar(vector(point, p), vector(point, jad[0][1]));
   saver[0] = vector(jad[0][0], jad[0][1]);
-  var masafa = scalar(saver[0], saver[0]);
-  var vs = [0, 0];
+  // var masafa = scalar(saver[0], saver[0]);
+  let vs = [0, 0];
   for (var i = 1; i < jad[0].length - 1; i++) {
     vs = sum(vs, saver[i - 1]);
     saver[saver.length] = vector(jad[0][i], jad[0][i + 1]);
@@ -77,7 +76,7 @@ function filter(jad, point, p, saver) {
 }
 
 function distance(jad, p) {
-  var v = vector(jad, p);
+  const v = vector(jad, p);
   return scalar(v, v);
 }
 
@@ -94,7 +93,7 @@ function sort_feacher(GeoJSON, p) {
 function get_distance(geometry, p) {
   if (geometry.type === 'Polygon') {
     return distance(geometry.coordinates[0][0], p);
-  } else if (geometry.type === 'GeometryCollection'){
+  } else if (geometry.type === 'GeometryCollection') {
     return get_distance(geometry.geometries[0], p);
   } else {
     return distance(geometry.coordinates[0][0][0], p);
@@ -134,18 +133,18 @@ function normalv(jad, i, mx, mix) {
 }
 
 function sort_vector(jad, p, saver) {
-  var srt = new Array();
-  var v = new Array();
-  var d = new Array();
-  var viv;
-  var bln = true;
-  var u = 1000000;
+  const srt = [];
+  let v = [];
+  let d = [];
+  let viv;
+  let bln = true;
+  let u = 1000000;
   srt[0] = [u, -1];
-  for (var i = 0; i < jad[0].length - 1; i++) {
+  for (let i = 0; i < jad[0].length - 1; i++) {
     d = saver[i];
     v = vector(jad[0][i], p);
     if (scalar(v, d) >= 0) {
-      var ti = (new Date()).getTime();
+      // var ti = (new Date()).getTime();
       if (scalar(v, d) <= scalar(d, d)) {
         f = det(v, unit(d));
         if (Math.pow(f, 2) <= srt[0][0]) {
@@ -165,77 +164,86 @@ function sort_vector(jad, p, saver) {
       }
     }
   }
-  srt[1] = new Array();
+  srt[1] = [];
   srt[1][0] = u;
   srt[1][1] = viv;
   return srt;
 }
 
-module.exports =
-  {
-    polygon: function (jad, p) {
-      var intern = false;
-      var saver = new Array();
-      var threshold = vct_max(jad, jad[0][0], p, saver);
-      if (threshold != -1) {
-        mx = normal_ref_vector(jad, threshold);
-        var ti = (new Date()).getTime();
-        var tbs = sort_vector(jad, p, saver);
-        if (tbs[0][0] <= tbs[1][0]) {
-          if (tbs[0][0] <= tbs[1][0]) {
-            if (scalar(normal_vector(jad, tbs[0][1], mx, threshold), vector(jad[0][tbs[0][1]], p)) <= 0) {
-              intern = true;
-            }
-          }
-        }
-        else {
-          var v = vector(jad[0][tbs[1][1]], p);
-          if (Math.abs(det(v, unit(saver[tbs[1][1]]))) > Math.abs(det(v, unit(saver[((tbs[1][1] > 0) ? tbs[1][1] - 1 : saver.length - 1)])))) {
-            if (scalar(normal_vector(jad, tbs[1][1], mx, threshold), v) <= 0) {
-              intern = true;
-            }
-          }
-          else {
-            if (scalar(normal_vector(jad, circular(jad[0].length, tbs[1][1])[0], mx, threshold), v) <= 0) {
-              intern = true;
-            }
-          }
+function polygon(jad, p) {
+  let intern = false;
+  const saver = [];
+  const threshold = vct_max(jad, jad[0][0], p, saver);
+  if (threshold !== -1) {
+    const mx = normal_ref_vector(jad, threshold);
+    // var ti = (new Date()).getTime();
+    const tbs = sort_vector(jad, p, saver);
+    if (tbs[0][0] <= tbs[1][0]) {
+      if (tbs[0][0] <= tbs[1][0]) {
+        if (scalar(normal_vector(jad, tbs[0][1], mx, threshold), vector(jad[0][tbs[0][1]], p)) <= 0) {
+          intern = true;
         }
       }
-      return intern;
+    } else {
+      const v = vector(jad[0][tbs[1][1]], p);
+      if (Math.abs(det(v, unit(saver[tbs[1][1]]))) > Math.abs(det(v, unit(saver[((tbs[1][1] > 0) ? tbs[1][1] - 1 : saver.length - 1)])))) {
+        if (scalar(normal_vector(jad, tbs[1][1], mx, threshold), v) <= 0) {
+          intern = true;
+        }
+      } else {
+        if (scalar(normal_vector(jad, circular(jad[0].length, tbs[1][1])[0], mx, threshold), v) <= 0) {
+          intern = true;
+        }
+      }
     }
-    ,
-    feature: function (GeoJSON, p) {
-      var a = [];
-      var sort = sort_feacher(GeoJSON, p);
-      for (var i = 0; i < sort.length; i++) {
-        if (GeoJSON.features[sort[i].id].geometry.type == 'Polygon') {
-          if (this.polygon(GeoJSON.features[sort[i].id].geometry.coordinates, p)) {
-            a.push({
-              id: sort[i].id,
-              properties: GeoJSON.features[sort[i].id].properties,
-              type: 'Polygon'
-            });
-            continue;
-          }
-        } else {
-          for (var j = 0; j < GeoJSON.features[sort[i].id].geometry.coordinates.length; j++) {
-            if (this.polygon(GeoJSON.features[sort[i].id].geometry.coordinates[j], p)) {
-              a.push({
-                id: sort[i].id,
-                properties: GeoJSON.features[sort[i].id].properties,
-                type: 'MultiPolygon',
-                polygon: j
-              })
-              continue;
-            }
-          }
-          if (a) {
-            continue;
-          }
-        }
-      }
+  }
+  return intern;
+}
 
-      return a && a.length ? a : -1;
+function feature(GeoJSON, p) {
+  const a = [];
+  const sort = sort_feacher(GeoJSON, p);
+  for (let i = 0; i < sort.length; i++) {
+    const res = checkInsidePolygon(GeoJSON.features[sort[i].id].geometry, p);
+    if (res) {
+      a.push({
+        id: sort[i].id,
+        properties: GeoJSON.features[sort[i].id].properties,
+        ...res
+      });
     }
-  };
+  }
+  return a;
+}
+
+function checkInsidePolygon(geometry, p) {
+  if (geometry.type === 'Polygon') {
+    if (polygon(geometry.coordinates, p)) {
+      return {type: 'Polygon'};
+    }
+  } else if (geometry.type === 'GeometryCollection') {
+    for (const g of geometry.geometries) {
+      const res = checkInsidePolygon(g, p);
+      if (res) {
+        res.subType = res.type;
+        res.type = 'GeometryCollection';
+        return res;
+      }
+    }
+  } else if (geometry.type === 'MultiPolygon') {
+    for (let j = 0; j < geometry.coordinates.length; j++) {
+      if (this.polygon(geometry.coordinates[j], p)) {
+        return {
+          type: 'MultiPolygon',
+          polygon: j
+        };
+      }
+    }
+  } else {
+    throw new Error(`Type '${geometry.type}' is not supported`);
+  }
+  return undefined;
+}
+
+module.exports = {polygon, feature};
+
